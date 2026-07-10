@@ -1,11 +1,12 @@
 "use client";
 
-import type { FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 
 const CONSULTATION_SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbz_qksThrgOh0ukEi1tQGmqnKk5laZ2-7QaqCA94zoHPxRPI-SqqtaFID1woM9RylxD/exec";
 
 export default function ConsultationForm() {
+    const [message, setMessage] = useState("");
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -41,11 +42,11 @@ export default function ConsultationForm() {
         }),
       });
 
-      alert("상담 신청이 정상적으로 접수되었습니다.");
+      setMessage("상담 신청이 정상적으로 접수되었습니다.");
       form.reset();
     } catch (error) {
       console.error(error);
-      alert("상담 신청 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      setMessage("상담 신청 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
     }
   }
 
@@ -87,6 +88,7 @@ export default function ConsultationForm() {
       <button type="submit" className="primaryBtn fullBtn">
         상담 신청하기
       </button>
+      {message && <p className="consultMessage">{message}</p>}
 
       <a href="tel:01082867620" className="consultPhoneBtn">
         전화상담 010-8286-7620
