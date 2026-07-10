@@ -3,6 +3,7 @@ import pages from '@/data/pages.json';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import QuickConsultActions from './QuickConsultActions';
+import ConsultationForm from './ConsultationForm';
 import SubjectTabs from './SubjectTabs';
 
 type PageItem = {
@@ -79,34 +80,7 @@ function ConsultationSection() {
         </div>
       </div>
 
-      <form className="consultForm">
-        <label>
-          이름
-          <input type="text" placeholder="예: 홍길동" />
-        </label>
-        <label>
-          학생 학년
-          <input type="text" placeholder="예: 초4, 중2, 고1" />
-        </label>
-        <label>
-          희망 과목
-          <input type="text" placeholder="예: 수학, 영어, 국어" />
-        </label>
-        <label>
-          상담 가능한 연락처
-          <input type="text" placeholder="예: 010-0000-0000" />
-        </label>
-        <label className="checkLabel">
-          <input type="checkbox" />
-          개인정보 수집 및 이용에 동의합니다.
-        </label>
-        <button type="submit" className="primaryBtn fullBtn">
-          상담 신청하기
-        </button>
-        <a href="tel:01082867620" className="consultPhoneBtn">
-          전화상담 010-8286-7620
-        </a>
-      </form>
+      <ConsultationForm />
     </section>
   );
 }
