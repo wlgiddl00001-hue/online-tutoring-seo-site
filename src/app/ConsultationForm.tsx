@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
 const CONSULTATION_SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbz_qksThrgOh0ukEi1tQGmqnKk5laZ2-7QaqCA94zoHPxRPI-SqqtaFID1woM9RylxD/exec";
@@ -11,12 +11,37 @@ type ConsultationFormProps = {
   phonePlaceholder?: string;
 };
 
+type SubmissionStatus = "success" | "error" | null;
+
 export default function ConsultationForm({
   showHeader = true,
   gradePlaceholder = "예: 초6, 중2, 고1",
   phonePlaceholder = "예: 010-1234-5678",
 }: ConsultationFormProps) {
-  const [message, setMessage] = useState("");
+  const [submissionStatus, setSubmissionStatus] =
+    useState<SubmissionStatus>(null);
+  const messageRef = useRef<HTMLDivElement>(null);
+
+  const isSuccess = submissionStatus === "success";
+  const isError = submissionStatus === "error";
+
+  useEffect(() => {
+    if (submissionStatus !== "success") {
+      return;
+    }
+
+    messageRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }, [submissionStatus]);
+
+  function handleChange() {
+    if (submissionStatus) {
+      setSubmissionStatus(null);
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -52,16 +77,16 @@ export default function ConsultationForm({
         }),
       });
 
-      setMessage("상담 신청이 정상적으로 접수되었습니다.");
+      setSubmissionStatus("success");
       form.reset();
     } catch (error) {
       console.error(error);
-      setMessage("상담 신청 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      setSubmissionStatus("error");
     }
   }
 
   return (
-    <form className="consultForm" onSubmit={handleSubmit}>
+    <form className="consultForm" onSubmit={handleSubmit} onChange={handleChange}>
       {showHeader && (
         <div className="consultFormHead">
           <strong>온라인 과외 상담 신청</strong>
@@ -98,9 +123,30 @@ export default function ConsultationForm({
       </label>
 
       <button type="submit" className="primaryBtn fullBtn">
-        상담 신청하기
+        {submissionStatus === "success" ? "접수 완료" : "상담 신청하기"}
       </button>
-      {message && <p className="consultMessage">{message}</p>}
+      {(isSuccess || isError) && (
+        <div
+          ref={messageRef}
+          className={`consultMessage consultMessage--${submissionStatus}`}
+          role={submissionStatus === "error" ? "alert" : "status"}
+          aria-live="polite"
+        >
+          {isSuccess ? (
+            <>
+              상담 신청이 정상적으로 접수되었습니다.
+              <br />
+              확인 후 빠르게 연락드리겠습니다.
+            </>
+          ) : (
+            <>
+              접수 중 오류가 발생했습니다.
+              <br />
+              잠시 후 다시 시도해주세요.
+            </>
+          )}
+        </div>
+      )}
 
       <a href="tel:01082867620" className="consultPhoneBtn">
         전화상담 010-8286-7620
