@@ -429,6 +429,50 @@ input {
   font-weight: 750;
 }
 
+.featuredLinkSection {
+  background: linear-gradient(150deg, #ffffff, #f8fbff);
+}
+
+.featuredLinkGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.featuredLinkCard {
+  display: flex;
+  min-width: 0;
+  min-height: 118px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: #ffffff;
+  color: #24324a;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.featuredLinkCard:hover {
+  transform: translateY(-3px);
+  border-color: #bfdbfe;
+  box-shadow: 0 16px 34px rgba(37, 99, 235, 0.1);
+}
+
+.featuredLinkCard small {
+  color: var(--primary-dark);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.featuredLinkCard strong {
+  overflow-wrap: anywhere;
+  font-size: 18px;
+  line-height: 1.45;
+  letter-spacing: -0.035em;
+}
+
 .consultSection {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
@@ -1020,6 +1064,7 @@ input {
 
 .relatedCard strong {
   margin: 16px 0;
+  overflow-wrap: anywhere;
   font-size: 19px;
   line-height: 1.45;
   letter-spacing: -0.035em;
@@ -1092,6 +1137,7 @@ input {
   }
 
   .gradePickerGrid,
+  .featuredLinkGrid,
   .relatedGrid {
     grid-template-columns: 1fr;
   }

@@ -2,9 +2,12 @@ import { getStableImage, mainImages } from '@/data/imageMap';
 import pages from '@/data/pages.json';
 import type { Metadata } from 'next';
 import Image from 'next/image';
+import Link from 'next/link';
+import JsonLd from './JsonLd';
 import QuickConsultActions from './QuickConsultActions';
 import ConsultationForm from './ConsultationForm';
 import SubjectTabs from './SubjectTabs';
+import { createOrganizationSchema, createWebsiteSchema } from '@/lib/structured-data';
 
 type PageItem = {
   slug: string;
@@ -24,6 +27,12 @@ type GradeSection = {
 };
 
 const allPages = pages as PageItem[];
+const siteUrl = 'https://online-tutoring-seo-site.vercel.app';
+const siteName = '온라인 과외 전문';
+const mainTitle = '호빈샘 온라인 과외 | 초등·중등·고등 1대1 수업';
+const mainDescription =
+  '초등 기초부터 중등 내신, 고등 심화와 입시 준비까지 학생 수준과 목표에 맞춰 진행하는 1대1 온라인 과외입니다.';
+const ogImage = `${siteUrl}/images/online/main-01.png`;
 const subjects = ['국어', '영어', '수학', '사회', '과학', '한국사'];
 const gradeSections: GradeSection[] = [
   {
@@ -46,10 +55,89 @@ const gradeSections: GradeSection[] = [
   },
 ];
 
+const goalLabels: Record<string, string> = {
+  시험대비: '시험 대비',
+  문제풀이: '문제 풀이',
+  학습습관: '학습 습관 관리',
+};
+
+const featuredLinkTargets = [
+  { grade: '초등', subject: '국어', goal: '어휘', group: '초등 과목' },
+  { grade: '초등', subject: '수학', goal: '기초', group: '초등 기초' },
+  { grade: '초등', subject: '영어', goal: '수행평가', group: '초등 수행평가' },
+  { grade: '초등', subject: '사회', goal: '독해', group: '초등 과목' },
+  { grade: '초등', subject: '과학', goal: '개념', group: '초등 과목' },
+  { grade: '초등', subject: '한국사', goal: '어휘', group: '초등 과목' },
+  { grade: '중등', subject: '국어', goal: '기초', group: '중등 기초' },
+  { grade: '중등', subject: '영어', goal: '문법', group: '중등 문법' },
+  { grade: '중등', subject: '수학', goal: '시험대비', group: '중등 시험 대비' },
+  { grade: '중등', subject: '사회', goal: '심화', group: '중등 심화' },
+  { grade: '중등', subject: '과학', goal: '기초', group: '중등 과목' },
+  { grade: '중등', subject: '한국사', goal: '수행평가', group: '중등 과목' },
+  { grade: '고등', subject: '국어', goal: '입시', group: '고등 입시' },
+  { grade: '고등', subject: '영어', goal: '입시', group: '고등 입시' },
+  { grade: '고등', subject: '수학', goal: '심화', group: '고등 심화' },
+  { grade: '고등', subject: '과학', goal: '내신', group: '고등 내신' },
+  { grade: '고등', subject: '한국사', goal: '내신', group: '고등 내신' },
+  { grade: '고등', subject: '사회', goal: '입시', group: '고등 입시' },
+];
+
+function getGoalLabel(goal: string) {
+  return goalLabels[goal] ?? goal;
+}
+
+function getFeaturedLinks() {
+  return featuredLinkTargets
+    .map((target) => {
+      const page = allPages.find(
+        (item) =>
+          item.grade === target.grade &&
+          item.subject === target.subject &&
+          item.goal === target.goal,
+      );
+
+      if (!page) {
+        return null;
+      }
+
+      return {
+        ...target,
+        slug: page.slug,
+        label: `${page.grade} ${page.subject} ${getGoalLabel(page.goal)} 온라인 과외`,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+}
+
 export const metadata: Metadata = {
-  title: '호빈샘 온라인 과외 | 초등·중등·고등 1대1 수업',
-  description:
-    '초등 기초부터 중등 내신, 고등 심화와 입시 준비까지 학생 수준과 목표에 맞춰 진행하는 1대1 온라인 과외입니다.',
+  title: mainTitle,
+  description: mainDescription,
+  alternates: {
+    canonical: siteUrl,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'ko_KR',
+    siteName,
+    url: siteUrl,
+    title: mainTitle,
+    description: mainDescription,
+    images: [
+      {
+        url: ogImage,
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: mainTitle,
+    description: mainDescription,
+    images: [ogImage],
+  },
 };
 
 function ConsultationSection() {
@@ -87,9 +175,22 @@ function ConsultationSection() {
 
 export default function Home() {
   const heroImage = getStableImage(mainImages, 'main-online-tutoring');
+  const featuredLinks = getFeaturedLinks();
+  const websiteSchema = createWebsiteSchema({
+    siteName,
+    siteUrl,
+    description: mainDescription,
+  });
+  const organizationSchema = createOrganizationSchema({
+    siteName,
+    siteUrl,
+    telephone: '010-8286-7620',
+  });
 
   return (
     <main className="site">
+      <JsonLd id="website-json-ld" data={websiteSchema} />
+      <JsonLd id="organization-json-ld" data={organizationSchema} />
       <QuickConsultActions />
 
       <section className="hero">
@@ -170,6 +271,24 @@ export default function Home() {
           />
         </section>
       ))}
+
+      <section className="section featuredLinkSection">
+        <div className="sectionHeading">
+          <p className="sectionLabel">대표 수업 바로가기</p>
+          <h2>학년·과목·목표별 온라인 과외를 바로 살펴보세요</h2>
+          <p>
+            자주 찾는 조합을 학년, 과목, 학습목표가 골고루 보이도록 정리했습니다.
+          </p>
+        </div>
+        <div className="featuredLinkGrid">
+          {featuredLinks.map((item) => (
+            <Link href={`/${item.slug}`} className="featuredLinkCard" key={item.slug}>
+              <small>{item.group}</small>
+              <strong>{item.label}</strong>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       <ConsultationSection />
     </main>

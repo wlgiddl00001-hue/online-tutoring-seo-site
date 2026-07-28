@@ -5,7 +5,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ConsultationForm from '../ConsultationForm';
+import JsonLd from '../JsonLd';
 import QuickConsultActions from '../QuickConsultActions';
+import {
+  createBreadcrumbSchema,
+  createFaqPageSchema,
+  createWebPageSchema,
+} from '@/lib/structured-data';
 
 type PageItem = {
   slug: string;
@@ -29,11 +35,55 @@ type PageItem = {
   a3: string;
 };
 
+type RelatedLink = {
+  href: string;
+  label: string;
+  meta: string;
+};
+
 type DetailPageProps = {
   params: Promise<{ slug: string }>;
 };
 
 const allPages = pages as PageItem[];
+const siteUrl = 'https://online-tutoring-seo-site.vercel.app';
+const siteName = '온라인 과외 전문';
+const ogImage = `${siteUrl}/images/online/main-01.png`;
+const subjectOrder = ['국어', '영어', '수학', '사회', '과학', '한국사'];
+const gradeOrder = ['초등', '중등', '고등'];
+const goalOrder = [
+  '기초',
+  '개념',
+  '문법',
+  '어휘',
+  '독해',
+  '문제풀이',
+  '시험대비',
+  '내신',
+  '수행평가',
+  '심화',
+  '학습습관',
+  '입시',
+];
+const goalLabels: Record<string, string> = {
+  시험대비: '시험 대비',
+  문제풀이: '문제 풀이',
+  학습습관: '학습 습관 관리',
+};
+const similarGoals: Record<string, string[]> = {
+  시험대비: ['시험대비', '내신', '문제풀이', '개념'],
+  내신: ['내신', '시험대비', '수행평가', '개념'],
+  문제풀이: ['문제풀이', '개념', '시험대비', '심화'],
+  기초: ['기초', '개념', '학습습관', '문제풀이'],
+  개념: ['개념', '기초', '문제풀이', '문법'],
+  문법: ['문법', '개념', '어휘', '문제풀이'],
+  어휘: ['어휘', '독해', '개념', '문법'],
+  독해: ['독해', '어휘', '문제풀이', '개념'],
+  수행평가: ['수행평가', '내신', '개념', '문제풀이'],
+  심화: ['심화', '문제풀이', '개념', '입시'],
+  학습습관: ['학습습관', '기초', '개념', '내신'],
+  입시: ['입시', '심화', '내신', '시험대비'],
+};
 
 const gradeHeadlines: Record<string, string[]> = {
   초등: [
@@ -251,31 +301,121 @@ function findPage(slug: string) {
   return allPages.find((page) => page.slug === slug);
 }
 
-function getRelatedPages(currentPage: PageItem) {
-  const sameGradeAndSubject = allPages.filter(
-    (page) =>
-      page.slug !== currentPage.slug &&
-      page.grade === currentPage.grade &&
-      page.subject === currentPage.subject,
+function getGoalLabel(goal: string) {
+  return goalLabels[goal] ?? goal;
+}
+
+function sortByLearningPath(firstPage: PageItem, secondPage: PageItem) {
+  const firstGrade = gradeOrder.indexOf(firstPage.grade);
+  const secondGrade = gradeOrder.indexOf(secondPage.grade);
+  const firstSubject = subjectOrder.indexOf(firstPage.subject);
+  const secondSubject = subjectOrder.indexOf(secondPage.subject);
+  const firstGoal = goalOrder.indexOf(firstPage.goal);
+  const secondGoal = goalOrder.indexOf(secondPage.goal);
+
+  return (
+    firstGrade - secondGrade ||
+    firstSubject - secondSubject ||
+    firstGoal - secondGoal ||
+    firstPage.slug.localeCompare(secondPage.slug)
   );
-  const sameGrade = allPages.filter(
-    (page) =>
-      page.slug !== currentPage.slug &&
-      page.grade === currentPage.grade &&
-      page.subject !== currentPage.subject,
-  );
-  const sameSubject = allPages.filter(
-    (page) =>
-      page.slug !== currentPage.slug &&
-      page.grade !== currentPage.grade &&
-      page.subject === currentPage.subject,
-  );
+}
+
+function toRelatedLink(page: PageItem): RelatedLink {
+  return {
+    href: `/${page.slug}`,
+    label: `${page.grade} ${page.subject} ${getGoalLabel(page.goal)} 온라인 과외`,
+    meta: `${page.grade} · ${page.subject} · ${getGoalLabel(page.goal)}`,
+  };
+}
+
+function addUniquePage(target: PageItem[], candidate: PageItem | undefined, currentPage: PageItem) {
+  if (!candidate || candidate.slug === currentPage.slug) {
+    return;
+  }
+
+  if (target.some((page) => page.slug === candidate.slug)) {
+    return;
+  }
+
+  target.push(candidate);
+}
+
+function findSimilarGoalPage(grade: string, subject: string, currentGoal: string) {
+  const goals = similarGoals[currentGoal] ?? [currentGoal];
+
+  for (const goal of goals) {
+    const page = allPages.find(
+      (item) => item.grade === grade && item.subject === subject && item.goal === goal,
+    );
+
+    if (page) {
+      return page;
+    }
+  }
+
+  return allPages
+    .filter((item) => item.grade === grade && item.subject === subject)
+    .sort(sortByLearningPath)[0];
+}
+
+function getRelatedLinks(currentPage: PageItem): RelatedLink[] {
+  const selectedPages: PageItem[] = [];
+  const sameGradeAndSubject = allPages
+    .filter(
+      (page) =>
+        page.slug !== currentPage.slug &&
+        page.grade === currentPage.grade &&
+        page.subject === currentPage.subject,
+    )
+    .sort((firstPage, secondPage) => {
+      const currentGoalIndex = goalOrder.indexOf(currentPage.goal);
+      const firstDistance = Math.abs(goalOrder.indexOf(firstPage.goal) - currentGoalIndex);
+      const secondDistance = Math.abs(goalOrder.indexOf(secondPage.goal) - currentGoalIndex);
+
+      return firstDistance - secondDistance || sortByLearningPath(firstPage, secondPage);
+    });
+
+  for (const page of sameGradeAndSubject.slice(0, 3)) {
+    addUniquePage(selectedPages, page, currentPage);
+  }
+
+  for (const subject of subjectOrder.filter((subject) => subject !== currentPage.subject)) {
+    addUniquePage(
+      selectedPages,
+      findSimilarGoalPage(currentPage.grade, subject, currentPage.goal),
+      currentPage,
+    );
+
+    if (selectedPages.length >= 5) {
+      break;
+    }
+  }
+
+  for (const grade of gradeOrder.filter((grade) => grade !== currentPage.grade)) {
+    addUniquePage(
+      selectedPages,
+      findSimilarGoalPage(grade, currentPage.subject, currentPage.goal),
+      currentPage,
+    );
+  }
+
+  for (const page of [...allPages].sort(sortByLearningPath)) {
+    if (selectedPages.length >= 7) {
+      break;
+    }
+
+    addUniquePage(selectedPages, page, currentPage);
+  }
 
   return [
-    ...sameGradeAndSubject.slice(0, 3),
-    ...sameGrade.slice(0, 2),
-    ...sameSubject.slice(0, 1),
-  ].slice(0, 6);
+    ...selectedPages.slice(0, 7).map(toRelatedLink),
+    {
+      href: '/',
+      label: '온라인 과외 전체 보기',
+      meta: '홈',
+    },
+  ];
 }
 
 const subjectLearningPoint: Record<string, string> = {
@@ -301,69 +441,6 @@ function getLearningPoints(page: PageItem) {
   ];
 }
 
-function getRelatedKeywordPages(currentPage: PageItem) {
-  const relatedGoalsByGrade: Record<string, string[]> = {
-    초등: ['기초', '개념', '어휘', '독해', '문제풀이', '학습습관', '수행평가', '심화'],
-    중등: ['내신', '수행평가', '시험대비', '개념', '문제풀이', '문법', '독해', '어휘', '학습습관', '심화'],
-    고등: ['내신', '시험대비', '심화', '입시', '개념', '문제풀이', '독해', '문법', '어휘', '학습습관', '수행평가'],
-  };
-  const allowedGoals = relatedGoalsByGrade[currentPage.grade] ?? [];
-  const candidates = allPages
-    .filter(
-      (page) =>
-        page.grade === currentPage.grade &&
-        page.slug !== currentPage.slug &&
-        !(page.subject === currentPage.subject && page.goal === currentPage.goal) &&
-        allowedGoals.includes(page.goal),
-    )
-    .sort((firstPage, secondPage) => {
-      const firstScore = getStableHash(`${currentPage.slug}:${firstPage.slug}`);
-      const secondScore = getStableHash(`${currentPage.slug}:${secondPage.slug}`);
-
-      return firstScore - secondScore || firstPage.slug.localeCompare(secondPage.slug);
-    });
-  const selectedPages: PageItem[] = [];
-  const subjectCounts = new Map<string, number>();
-  const goalCounts = new Map<string, number>();
-
-  for (const candidate of candidates) {
-    const subjectCount = subjectCounts.get(candidate.subject) ?? 0;
-    const goalCount = goalCounts.get(candidate.goal) ?? 0;
-
-    if (subjectCount >= 2 || goalCount >= 2) {
-      continue;
-    }
-
-    selectedPages.push(candidate);
-    subjectCounts.set(candidate.subject, subjectCount + 1);
-    goalCounts.set(candidate.goal, goalCount + 1);
-
-    if (selectedPages.length === 10) {
-      break;
-    }
-  }
-
-  return selectedPages;
-}
-
-function getRelatedKeywordLabel(currentPage: PageItem, relatedPage: PageItem) {
-  const { grade, subject, goal } = relatedPage;
-
-  return pickStable(
-    [
-      `온라인 ${grade} ${subject} ${goal} 과외`,
-      `${grade} ${subject} ${goal} 온라인 수업`,
-      `온라인 ${grade} ${subject} ${goal} 1대1 과외`,
-      `${grade} ${subject} ${goal} 비대면 과외`,
-      `온라인 ${grade} ${subject} ${goal} 학습 관리`,
-      `${grade} ${subject} ${goal} 개념 정리 온라인 과외`,
-      `${grade} ${subject} ${goal} 온라인 과외`,
-      `온라인 ${grade} ${subject} ${goal} 맞춤 수업`,
-    ],
-    `${currentPage.slug}:${relatedPage.slug}:keyword-label`,
-  );
-}
-
 export function generateStaticParams() {
   return allPages.map(({ slug }) => ({ slug }));
 }
@@ -379,10 +456,38 @@ export async function generateMetadata({
   }
 
   const detailCopy = getDetailCopy(page);
+  const pageTitle = `${detailCopy.heroTitle} | 호빈샘`;
+  const pageUrl = `${siteUrl}/${page.slug}`;
 
   return {
-    title: `${detailCopy.heroTitle} | 호빈샘`,
+    title: pageTitle,
     description: page.metaDescription,
+    alternates: {
+      canonical: pageUrl,
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+    openGraph: {
+      type: 'website',
+      locale: 'ko_KR',
+      siteName,
+      url: pageUrl,
+      title: pageTitle,
+      description: page.metaDescription,
+      images: [
+        {
+          url: ogImage,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: pageTitle,
+      description: page.metaDescription,
+      images: [ogImage],
+    },
   };
 }
 
@@ -400,18 +505,35 @@ export default async function DetailPage({ params }: DetailPageProps) {
     page.slug,
     2,
   );
-  const relatedPages = getRelatedPages(page);
+  const relatedLinks = getRelatedLinks(page);
   const learningPoints = getLearningPoints(page);
-  const relatedKeywordPages = getRelatedKeywordPages(page);
   const detailCopy = getDetailCopy(page);
+  const pageTitle = `${detailCopy.heroTitle} | 호빈샘`;
+  const pageUrl = `${siteUrl}/${page.slug}`;
   const faqs = [
     { question: page.q1, answer: page.a1 },
     { question: page.q2, answer: page.a2 },
     { question: page.q3, answer: page.a3 },
   ];
+  const webPageSchema = createWebPageSchema({
+    siteName,
+    siteUrl,
+    pageUrl,
+    pageName: pageTitle,
+    description: page.metaDescription,
+  });
+  const breadcrumbSchema = createBreadcrumbSchema({
+    siteUrl,
+    pageUrl,
+    pageName: detailCopy.heroTitle,
+  });
+  const faqPageSchema = createFaqPageSchema(faqs);
 
   return (
     <main className="site detailSite">
+      <JsonLd id="webpage-json-ld" data={webPageSchema} />
+      <JsonLd id="breadcrumb-json-ld" data={breadcrumbSchema} />
+      {faqPageSchema ? <JsonLd id="faq-json-ld" data={faqPageSchema} /> : null}
       <QuickConsultActions />
 
       <article className="blogArticle">
@@ -515,18 +637,6 @@ export default async function DetailPage({ params }: DetailPageProps) {
             </p>
           </aside>
 
-          <aside className="relatedKeywordBox">
-            <p className="sectionLabel">연관 키워드</p>
-            <h2>{detailCopy.keywordHeading}</h2>
-            <div className="relatedKeywordList">
-              {relatedKeywordPages.map((relatedPage) => (
-                <a href={`/${relatedPage.slug}`} key={relatedPage.slug}>
-                  {getRelatedKeywordLabel(page, relatedPage)}
-                </a>
-              ))}
-            </div>
-          </aside>
-
           <section className="articleSection faqSection">
             <p className="sectionLabel">FAQ</p>
             <h2>{detailCopy.faqHeading}</h2>
@@ -549,15 +659,13 @@ export default async function DetailPage({ params }: DetailPageProps) {
       <section className="relatedSection">
         <div className="sectionHeading">
           <p className="sectionLabel">함께 살펴보기</p>
-          <h2>{detailCopy.relatedHeading}</h2>
+          <h2>함께 살펴보면 좋은 온라인 과외</h2>
         </div>
         <div className="relatedGrid">
-          {relatedPages.map((relatedPage) => (
-            <Link href={`/${relatedPage.slug}`} className="relatedCard" key={relatedPage.slug}>
-              <small>
-                {relatedPage.grade} · {relatedPage.subject} · {relatedPage.goal}
-              </small>
-              <strong>{relatedPage.mainKeyword}</strong>
+          {relatedLinks.map((relatedLink) => (
+            <Link href={relatedLink.href} className="relatedCard" key={relatedLink.href}>
+              <small>{relatedLink.meta}</small>
+              <strong>{relatedLink.label}</strong>
               <span>자세히 보기 →</span>
             </Link>
           ))}
