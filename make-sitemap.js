@@ -3,7 +3,7 @@ const pages = require("./src/data/pages.json");
 
 const site = "https://online-tutoring-seo-site.vercel.app";
 
-const urls = [site].concat(
+const urls = [site, site + "/privacy"].concat(
   pages.map(function (page) {
     return site + "/" + page.slug;
   })

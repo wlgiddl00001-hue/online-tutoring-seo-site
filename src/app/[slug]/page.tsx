@@ -7,11 +7,16 @@ import { notFound } from 'next/navigation';
 import ConsultationForm from '../ConsultationForm';
 import JsonLd from '../JsonLd';
 import QuickConsultActions from '../QuickConsultActions';
+import TutoringDecisionGuide from '../TutoringDecisionGuide';
 import {
   createBreadcrumbSchema,
   createFaqPageSchema,
   createWebPageSchema,
 } from '@/lib/structured-data';
+import {
+  getContextualGoalLabel,
+  getContextualMetaDescription,
+} from '@/lib/tutoring-labels';
 
 type PageItem = {
   slug: string;
@@ -65,11 +70,6 @@ const goalOrder = [
   '학습습관',
   '입시',
 ];
-const goalLabels: Record<string, string> = {
-  시험대비: '시험 대비',
-  문제풀이: '문제 풀이',
-  학습습관: '학습 습관 관리',
-};
 const similarGoals: Record<string, string[]> = {
   시험대비: ['시험대비', '내신', '문제풀이', '개념'],
   내신: ['내신', '시험대비', '수행평가', '개념'],
@@ -84,6 +84,42 @@ const similarGoals: Record<string, string[]> = {
   학습습관: ['학습습관', '기초', '개념', '내신'],
   입시: ['입시', '심화', '내신', '시험대비'],
 };
+
+const bodyFields: Array<keyof Pick<PageItem, 'intro' | 'body1' | 'body2' | 'body3' | 'faq1' | 'a1' | 'a2' | 'a3'>> = [
+  'intro',
+  'body1',
+  'body2',
+  'body3',
+  'faq1',
+  'a1',
+  'a2',
+  'a3',
+];
+
+function getRepeatedBodySentences() {
+  const sentenceCounts = new Map<string, number>();
+
+  for (const page of allPages) {
+    for (const field of bodyFields) {
+      const sentences = page[field]
+        .split(/(?<=[.!?])\s+/)
+        .map((sentence) => sentence.trim())
+        .filter((sentence) => sentence.length >= 20);
+
+      for (const sentence of sentences) {
+        sentenceCounts.set(sentence, (sentenceCounts.get(sentence) ?? 0) + 1);
+      }
+    }
+  }
+
+  return new Set(
+    [...sentenceCounts.entries()]
+      .filter(([, count]) => count >= 12)
+      .map(([sentence]) => sentence),
+  );
+}
+
+const repeatedBodySentences = getRepeatedBodySentences();
 
 const gradeHeadlines: Record<string, string[]> = {
   초등: [
@@ -150,6 +186,30 @@ const deliverySummaries = [
   '개념 확인부터 오답 정리까지 한 흐름으로 관리합니다.',
 ];
 
+const subjectSearchTopics: Record<string, string> = {
+  국어: '비문학 독해, 문학 작품 분석, 어휘와 서술형 답안',
+  영어: '영어 어휘, 문법, 문장 구조와 독해',
+  수학: '개념 이해, 유형별 문제풀이와 오답관리',
+  사회: '교과 개념, 지도·도표·그래프 자료 해석',
+  과학: '과학 개념, 실험·탐구 과정과 자료 해석',
+  한국사: '시대 흐름, 핵심 사건, 사료와 연표 해석',
+};
+
+const goalSearchFocus: Record<string, string> = {
+  기초: '학습 공백을 찾고 쉬운 개념부터 다시 연결하는 과정',
+  개념: '용어를 외우는 데서 끝내지 않고 원리를 설명하는 과정',
+  문법: '규칙을 예문과 실제 문제에 정확히 적용하는 과정',
+  어휘: '핵심 어휘를 문맥과 문제 조건 안에서 익히는 과정',
+  독해: '글과 자료의 구조를 읽고 답의 근거를 찾는 과정',
+  문제풀이: '풀이 순서와 선택 근거를 확인하며 실수를 줄이는 과정',
+  시험대비: '시험 범위와 남은 기간에 맞춰 복습 순서를 정하는 과정',
+  내신: '학교 진도와 시험 범위, 서술형과 오답을 함께 관리하는 과정',
+  수행평가: '평가 기준을 확인하고 발표·보고서·서술 과정을 나누는 준비',
+  심화: '여러 개념이 연결된 문제에서 접근 근거를 설명하는 과정',
+  학습습관: '계획과 실행, 복습 여부를 수업마다 확인하는 과정',
+  입시: '현재 성적과 목표를 비교해 학습 우선순위를 세우는 과정',
+};
+
 function getStableHash(value: string) {
   let hash = 0;
 
@@ -169,6 +229,7 @@ function pickStable<T>(options: T[], key: string) {
 }
 
 function getDetailCopy(page: PageItem) {
+  const goalLabel = getContextualGoalLabel(page);
   const gradeOptions = gradeHeadlines[page.grade] ?? gradeHeadlines.초등;
   const subjectOptions = subjectHeadlines[page.subject] ?? subjectHeadlines.국어;
   const subjectSummaryOptions = subjectSummaries[page.subject] ?? subjectSummaries.국어;
@@ -184,30 +245,30 @@ function getDetailCopy(page: PageItem) {
   return {
     heroTitle: pickStable(
       [
-        `온라인 ${page.grade} ${page.subject}과외, ${page.goal} ${subjectHeadline} 수업`,
-        `${page.grade} ${page.subject} ${page.goal} 온라인 과외, ${subjectHeadline} 수업`,
-        `온라인 ${page.grade} ${page.subject}과외, ${page.goal} ${alternateSubjectHeadline} 수업`,
-        `${page.grade} ${page.subject} ${page.goal} 온라인 과외, ${alternateSubjectHeadline} 1대1 수업`,
+        `온라인 ${page.grade} ${page.subject}과외, ${goalLabel} ${subjectHeadline} 수업`,
+        `${page.grade} ${page.subject} ${goalLabel} 온라인 과외, ${subjectHeadline} 수업`,
+        `온라인 ${page.grade} ${page.subject}과외, ${goalLabel} ${alternateSubjectHeadline} 수업`,
+        `${page.grade} ${page.subject} ${goalLabel} 온라인 과외, ${alternateSubjectHeadline} 1대1 수업`,
       ],
       `${page.slug}:hero`,
     ),
     overviewLabel: pickStable(
-      ['수업 핵심 안내', `${page.subject} 학습 방향`, `${page.goal} 수업 한눈에 보기`, '온라인 수업 핵심 정리'],
+      ['수업 핵심 안내', `${page.subject} 학습 방향`, `${goalLabel} 수업 한눈에 보기`, '온라인 수업 핵심 정리'],
       `${page.slug}:overview`,
     ),
     summaryTitle: pickStable(
       [
-        `${page.grade} ${page.subject} ${page.goal} 학습 한눈에 보기`,
-        `${page.goal} 목표에 맞춘 ${page.subject} 학습 관리`,
-        `${page.subject} ${page.goal}, 이번 수업의 핵심`,
-        `온라인 ${page.grade} ${page.subject}${page.goal} 과외 핵심 정리`,
+        `${page.grade} ${page.subject} ${goalLabel} 학습 한눈에 보기`,
+        `${goalLabel} 목표에 맞춘 ${page.subject} 학습 관리`,
+        `${page.subject} ${goalLabel}, 이번 수업의 핵심`,
+        `온라인 ${page.grade} ${page.subject} ${goalLabel} 과외 핵심 정리`,
       ],
       `${page.slug}:summary-title`,
     ),
     summaryIntro: pickStable(
       [
         `${goalSummary} ${subjectSummary}`,
-        `온라인 ${page.grade} ${page.subject}${page.goal} 과외는 현재 수준을 확인한 뒤 목표에 맞는 순서로 학습을 진행합니다.`,
+        `온라인 ${page.grade} ${page.subject} ${goalLabel} 과외는 현재 수준을 확인한 뒤 목표에 맞는 순서로 학습을 진행합니다.`,
         `${gradeHeadline} ${goalSummary}`,
       ],
       `${page.slug}:summary-intro`,
@@ -219,31 +280,31 @@ function getDetailCopy(page: PageItem) {
     ],
     introHeading: pickStable(
       [
-        `${page.grade} ${page.subject} ${page.goal} 수업이 필요한 순간`,
-        `${page.subject} ${page.goal}, 먼저 확인할 학습 상태`,
-        `${page.goal} 준비 전에 살펴볼 ${page.subject} 학습 흐름`,
+        `${page.grade} ${page.subject} ${goalLabel} 수업이 필요한 순간`,
+        `${page.subject} ${goalLabel}, 먼저 확인할 학습 상태`,
+        `${goalLabel} 준비 전에 살펴볼 ${page.subject} 학습 흐름`,
       ],
       `${page.slug}:intro-heading`,
     ),
     directionHeading: pickStable(
       [
-        `${page.subject} ${page.goal} 목표에 맞춘 수업 방향`,
+        `${page.subject} ${goalLabel} 목표에 맞춘 수업 방향`,
         `${page.mainKeyword} 학습 설계`,
-        `${page.grade} ${page.subject}, ${page.goal} 과정을 정리하는 방법`,
+        `${page.grade} ${page.subject}, ${goalLabel} 과정을 정리하는 방법`,
       ],
       `${page.slug}:direction-heading`,
     ),
     managementHeading: pickStable(
       [
         `온라인 ${page.subject} 수업에서 확인하는 학습 과정`,
-        `${page.subject} 개념과 ${page.goal} 준비를 관리하는 방식`,
+        `${page.subject} 개념과 ${goalLabel} 준비를 관리하는 방식`,
         `1대1 수업에서 놓치지 않는 ${page.subject} 학습 포인트`,
       ],
       `${page.slug}:management-heading`,
     ),
     outcomeHeading: pickStable(
       [
-        `${page.subject} ${page.goal} 학습으로 기대하는 변화`,
+        `${page.subject} ${goalLabel} 학습으로 기대하는 변화`,
         '풀이와 복습 과정이 달라지는 지점',
         `${page.grade} ${page.subject} 학습의 다음 단계`,
       ],
@@ -252,18 +313,27 @@ function getDetailCopy(page: PageItem) {
     learningHeading: pickStable(
       [
         `${page.grade} ${page.subject} 학습 포인트`,
-        `${page.subject} ${page.goal} 핵심 관리 항목`,
-        `${page.goal} 목표를 위한 ${page.subject} 체크 포인트`,
+        `${page.subject} ${goalLabel} 핵심 관리 항목`,
+        `${goalLabel} 목표를 위한 ${page.subject} 체크 포인트`,
       ],
       `${page.slug}:learning-heading`,
     ),
     seoHeading: pickStable(
       [
-        `${page.grade} ${page.subject}과외, ${page.goal} 목표에 맞는 관리가 중요합니다`,
+        `${page.grade} ${page.subject}과외, ${goalLabel} 목표에 맞는 관리가 중요합니다`,
         `온라인 ${page.grade} ${page.subject}과외를 선택할 때 확인할 점`,
-        `${page.subject} ${page.goal} 수업, 설명과 복습이 이어져야 합니다`,
+        `${page.subject} ${goalLabel} 수업, 설명과 복습이 이어져야 합니다`,
       ],
       `${page.slug}:seo-heading`,
+    ),
+    seoParagraph: pickStable(
+      [
+        `${page.grade} ${page.subject} 온라인 과외를 알아볼 때는 진도 속도보다 ${goalSearchFocus[page.goal]} 중심으로 현재 상태를 먼저 확인하는 것이 좋습니다. ${subjectSearchTopics[page.subject]} 항목을 ${page.grade} 학생이 ${goalLabel} 목표에 맞춰 직접 설명하고 적용하는지 살펴야 수업 이후 복습도 이어질 수 있습니다. 실시간 1대1 ${page.subject} 수업에서는 답만 확인하지 않고 필기와 풀이 순서, 질문 반응을 함께 보며 ${goalLabel}에 맞는 과제량을 조정합니다.`,
+        `온라인 ${page.grade} ${page.subject}과외는 장소의 편리함만으로 선택하기보다 ${goalSearchFocus[page.goal]} 중심으로 수업이 진행되는지 비교해야 합니다. ${page.grade} ${page.subject} ${goalLabel} 수업 중에는 ${subjectSearchTopics[page.subject]} 내용을 화면에 표시하고, 학생이 이해한 부분을 말과 글로 다시 표현하도록 확인합니다. 이 기록을 ${page.grade} ${page.subject} 오답과 복습에 연결하면 ${goalLabel} 준비가 단순 반복으로 끝나는 것을 줄일 수 있습니다.`,
+        `${page.grade} 학생의 ${page.subject} ${goalLabel} 수업에서는 현재 점수만 보는 것보다 어느 단계에서 풀이가 멈추는지 진단하는 일이 먼저입니다. ${page.grade} ${page.subject} ${goalLabel} 학습에서는 ${subjectSearchTopics[page.subject]} 내용을 중심으로 이해, 적용, 오답 정리의 순서를 만들고 실시간 질문으로 상태를 확인합니다. 온라인 ${page.grade} ${page.subject} 수업 전에는 ${goalLabel} 지도 범위와 일정, 과제 확인 방식도 함께 비교하는 것이 좋습니다.`,
+        `${page.subject} 온라인 과외를 찾는 ${page.grade} 학생이라면 ${goalSearchFocus[page.goal]} 중심의 수업 후 관리 방식을 함께 살펴보세요. 화면 공유로 ${page.grade} ${page.subject} ${goalLabel}에 필요한 ${subjectSearchTopics[page.subject]} 내용을 확인하고, 학생이 직접 풀이 근거를 설명하도록 합니다. 무료 모의수업에서는 ${page.grade} ${page.subject} ${goalLabel}에 맞는 설명 속도와 질문 방식, 화면 집중도도 먼저 확인할 수 있습니다.`,
+      ],
+      `${page.slug}:seo-paragraph`,
     ),
     keywordHeading: pickStable(
       [
@@ -281,7 +351,7 @@ function getDetailCopy(page: PageItem) {
     faqHeading: pickStable(
       [
         `${page.grade} ${page.subject} 수업 자주 묻는 질문`,
-        `${page.subject} ${page.goal} 과외 FAQ`,
+        `${page.subject} ${goalLabel} 과외 FAQ`,
         `온라인 ${page.subject} 수업 전 확인할 질문`,
       ],
       `${page.slug}:faq-heading`,
@@ -290,10 +360,11 @@ function getDetailCopy(page: PageItem) {
       [
         `${page.grade} 과정의 다른 온라인 과외`,
         `${page.subject} 학습과 함께 살펴볼 수업`,
-        `${page.goal} 목표와 연결되는 온라인 과외`,
+        `${goalLabel} 목표와 연결되는 온라인 과외`,
       ],
       `${page.slug}:related-heading`,
     ),
+    metaDescription: getContextualMetaDescription(page),
   };
 }
 
@@ -301,8 +372,25 @@ function findPage(slug: string) {
   return allPages.find((page) => page.slug === slug);
 }
 
-function getGoalLabel(goal: string) {
-  return goalLabels[goal] ?? goal;
+function personalizeParagraph(
+  page: PageItem,
+  paragraph: string,
+  sectionLabel: string,
+) {
+  const context = `${page.grade} ${page.subject} ${getContextualGoalLabel(page)}`;
+
+  return paragraph
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => {
+      const trimmedSentence = sentence.trim();
+
+      if (!repeatedBodySentences.has(trimmedSentence)) {
+        return trimmedSentence;
+      }
+
+      return `${context} ${sectionLabel} 기준으로 보면, ${trimmedSentence}`;
+    })
+    .join(' ');
 }
 
 function sortByLearningPath(firstPage: PageItem, secondPage: PageItem) {
@@ -324,8 +412,8 @@ function sortByLearningPath(firstPage: PageItem, secondPage: PageItem) {
 function toRelatedLink(page: PageItem): RelatedLink {
   return {
     href: `/${page.slug}`,
-    label: `${page.grade} ${page.subject} ${getGoalLabel(page.goal)} 온라인 과외`,
-    meta: `${page.grade} · ${page.subject} · ${getGoalLabel(page.goal)}`,
+    label: `${page.grade} ${page.subject} ${getContextualGoalLabel(page)} 온라인 과외`,
+    meta: `${page.grade} · ${page.subject} · ${getContextualGoalLabel(page)}`,
   };
 }
 
@@ -437,7 +525,7 @@ function getLearningPoints(page: PageItem) {
   return [
     subjectLearningPoint[page.subject],
     gradeLearningPoint[page.grade],
-    `${page.goal} 목표에 맞춰 오답 원인을 정리하고 반복 실수를 줄입니다.`,
+    `${getContextualGoalLabel(page)} 목표에 맞춰 오답 원인을 정리하고 반복 실수를 줄입니다.`,
   ];
 }
 
@@ -461,7 +549,7 @@ export async function generateMetadata({
 
   return {
     title: pageTitle,
-    description: page.metaDescription,
+    description: detailCopy.metaDescription,
     alternates: {
       canonical: pageUrl,
     },
@@ -475,7 +563,7 @@ export async function generateMetadata({
       siteName,
       url: pageUrl,
       title: pageTitle,
-      description: page.metaDescription,
+      description: detailCopy.metaDescription,
       images: [
         {
           url: ogImage,
@@ -485,7 +573,7 @@ export async function generateMetadata({
     twitter: {
       card: 'summary_large_image',
       title: pageTitle,
-      description: page.metaDescription,
+      description: detailCopy.metaDescription,
       images: [ogImage],
     },
   };
@@ -508,19 +596,27 @@ export default async function DetailPage({ params }: DetailPageProps) {
   const relatedLinks = getRelatedLinks(page);
   const learningPoints = getLearningPoints(page);
   const detailCopy = getDetailCopy(page);
+  const goalLabel = getContextualGoalLabel(page);
   const pageTitle = `${detailCopy.heroTitle} | 호빈샘`;
   const pageUrl = `${siteUrl}/${page.slug}`;
+  const content = {
+    intro: personalizeParagraph(page, page.intro, '학습 진단'),
+    body1: personalizeParagraph(page, page.body1, '수업 설계'),
+    body2: personalizeParagraph(page, page.body2, '실시간 관리'),
+    body3: personalizeParagraph(page, page.body3, '복습 관리'),
+    faq1: personalizeParagraph(page, page.faq1, '상담 안내'),
+  };
   const faqs = [
-    { question: page.q1, answer: page.a1 },
-    { question: page.q2, answer: page.a2 },
-    { question: page.q3, answer: page.a3 },
+    { question: page.q1, answer: personalizeParagraph(page, page.a1, '첫 번째 답변') },
+    { question: page.q2, answer: personalizeParagraph(page, page.a2, '두 번째 답변') },
+    { question: page.q3, answer: personalizeParagraph(page, page.a3, '세 번째 답변') },
   ];
   const webPageSchema = createWebPageSchema({
     siteName,
     siteUrl,
     pageUrl,
     pageName: pageTitle,
-    description: page.metaDescription,
+    description: detailCopy.metaDescription,
   });
   const breadcrumbSchema = createBreadcrumbSchema({
     siteUrl,
@@ -542,12 +638,12 @@ export default async function DetailPage({ params }: DetailPageProps) {
             <div className="detailBadges">
               <span>{page.grade}</span>
               <span>{page.subject}</span>
-              <span>{page.goal}</span>
+              <span>{goalLabel}</span>
             </div>
             <h1>{detailCopy.heroTitle}</h1>
             <div className="metaDescriptionBox">
               <strong>{detailCopy.overviewLabel}</strong>
-              <p>{page.metaDescription}</p>
+              <p>{detailCopy.metaDescription}</p>
             </div>
             <div className="heroButtons">
               <a href="#consult" className="primaryBtn">상담 신청하기</a>
@@ -581,17 +677,17 @@ export default async function DetailPage({ params }: DetailPageProps) {
 
           <section className="articleSection">
             <h2>{detailCopy.introHeading}</h2>
-            <p>{page.intro}</p>
+            <p>{content.intro}</p>
           </section>
 
           <section className="articleSection">
             <h2>{detailCopy.directionHeading}</h2>
-            <p>{page.body1}</p>
+            <p>{content.body1}</p>
           </section>
 
           <section className="articleSection">
             <h2>{detailCopy.managementHeading}</h2>
-            <p>{page.body2}</p>
+            <p>{content.body2}</p>
           </section>
 
           <div className="detailInlineImage">
@@ -606,7 +702,7 @@ export default async function DetailPage({ params }: DetailPageProps) {
 
           <section className="articleSection">
             <h2>{detailCopy.outcomeHeading}</h2>
-            <p>{page.body3}</p>
+            <p>{content.body3}</p>
           </section>
 
           <aside className="learningPointBox">
@@ -622,25 +718,15 @@ export default async function DetailPage({ params }: DetailPageProps) {
           <aside className="seoKeywordBox">
             <p className="sectionLabel">온라인 수업 선택 기준</p>
             <h2>{detailCopy.seoHeading}</h2>
-            <p>
-              온라인 {page.grade} {page.subject}과외를 찾는 경우에는 단순히 진도만
-              빠르게 나가기보다 현재 개념 이해도와 {page.goal} 준비 상태, 문제를
-              푸는 습관부터 확인하는 과정이 중요합니다. 호빈샘 온라인 과외는
-              {` ${page.grade} 온라인 ${page.subject}과외`}와
-              {` ${page.grade}${page.subject}과외`},
-              {` ${page.grade} ${page.subject} 온라인 과외`}를 알아보는 학생에게
-              맞춰 설명과 실시간 풀이 확인, 오답 정리를 함께 진행합니다. 1대1
-              {` ${page.grade} ${page.subject}과외`}는 물론 화상
-              {` ${page.grade} ${page.subject}과외`}와 비대면
-              {` ${page.grade} ${page.subject}과외`}를 고민할 때도 학생이 직접
-              이해하고 설명할 수 있는지를 중심으로 수업을 설계합니다.
-            </p>
+            <p>{detailCopy.seoParagraph}</p>
           </aside>
+
+          <TutoringDecisionGuide grade={page.grade} subject={page.subject} goal={goalLabel} />
 
           <section className="articleSection faqSection">
             <p className="sectionLabel">FAQ</p>
             <h2>{detailCopy.faqHeading}</h2>
-            <p className="faqIntro">{page.faq1}</p>
+            <p className="faqIntro">{content.faq1}</p>
             <div className="faqList">
               {faqs.map((faq, index) => (
                 <article className="faqCard" key={faq.question}>
@@ -677,7 +763,7 @@ export default async function DetailPage({ params }: DetailPageProps) {
           <p className="sectionLabel">1대1 상담</p>
           <h2>{page.grade} {page.subject} 온라인 과외 상담</h2>
           <p>
-            현재 학습 상황과 {page.goal} 목표를 알려주시면 온라인 수업에서 먼저
+            현재 학습 상황과 {goalLabel} 목표를 알려주시면 온라인 수업에서 먼저
             관리할 부분을 안내해드립니다.
           </p>
           <div className="consultProcess">
@@ -700,6 +786,7 @@ export default async function DetailPage({ params }: DetailPageProps) {
 
         <ConsultationForm
           showHeader={false}
+          sourceLabel={`${page.grade} ${page.subject} ${goalLabel} 상세페이지`}
           gradePlaceholder="예: 초4, 중2, 고1"
           phonePlaceholder="예: 010-0000-0000"
         />

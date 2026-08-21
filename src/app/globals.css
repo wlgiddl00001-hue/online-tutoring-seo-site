@@ -42,6 +42,10 @@ a {
   text-decoration: none;
 }
 
+[id] {
+  scroll-margin-top: 96px;
+}
+
 button,
 input {
   font: inherit;
@@ -51,6 +55,87 @@ input {
   width: min(1180px, calc(100% - 40px));
   margin: 0 auto;
   padding: 48px 0 96px;
+}
+
+.siteHeader {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-bottom: 1px solid rgba(225, 231, 240, 0.9);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+}
+
+.siteHeaderInner {
+  display: flex;
+  width: min(1180px, calc(100% - 40px));
+  min-height: 78px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0 auto;
+}
+
+.siteBrand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.siteBrandMark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 12px;
+  background: #172f59;
+  color: #ffffff;
+  font-family: Georgia, serif;
+  font-size: 24px;
+}
+
+.siteBrand strong,
+.siteBrand small {
+  display: block;
+}
+
+.siteBrand strong {
+  font-size: 17px;
+  letter-spacing: -0.035em;
+}
+
+.siteBrand small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.siteNav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.siteNav a {
+  transition: color 0.18s ease;
+}
+
+.siteNav a:hover {
+  color: var(--primary-dark);
+}
+
+.siteHeaderConsult {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  padding: 0 20px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #ffffff !important;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.2);
 }
 
 .eyebrow,
@@ -530,7 +615,8 @@ input {
   font-weight: 900;
 }
 
-.consultForm input[type="text"] {
+.consultForm input[type="text"],
+.consultForm input[type="tel"] {
   width: 100%;
   height: 60px;
   padding: 0 18px;
@@ -540,7 +626,8 @@ input {
   font-size: 17px;
 }
 
-.consultForm input[type="text"]:focus {
+.consultForm input[type="text"]:focus,
+.consultForm input[type="tel"]:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
@@ -558,6 +645,30 @@ input {
   height: 20px;
 }
 
+.checkLabel span {
+  color: #526177;
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 650;
+}
+
+.checkLabel a {
+  color: var(--primary-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.consultNotice {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #f8fbff;
+  color: #41516a;
+  font-size: 14px;
+  line-height: 1.65;
+  font-weight: 700;
+}
+
 .fullBtn {
   width: 100%;
   border: 0;
@@ -569,6 +680,12 @@ input {
   min-height: 68px;
   border-radius: 18px;
   font-size: 19px;
+}
+
+.consultForm .fullBtn:disabled {
+  cursor: wait;
+  opacity: 0.68;
+  transform: none;
 }
 
 .consultMessage {
@@ -934,6 +1051,147 @@ input {
   background: linear-gradient(145deg, #f8fbff, #edf4ff);
 }
 
+.decisionGuide {
+  margin-top: 58px;
+  padding: 36px;
+  border: 1px solid #bfdbfe;
+  border-radius: 26px;
+  background: linear-gradient(145deg, #ffffff, #eff6ff);
+}
+
+.decisionGuide h2 {
+  margin: 0;
+  font-size: clamp(27px, 3.2vw, 36px);
+  line-height: 1.3;
+  letter-spacing: -0.05em;
+}
+
+.decisionGuideIntro {
+  margin: 16px 0 0;
+  color: #435269;
+  font-size: 17px;
+  line-height: 1.8;
+}
+
+.decisionGuideGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.decisionGuideGrid article {
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid #dbeafe;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.decisionGuideGrid span {
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.decisionGuideGrid strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 19px;
+  line-height: 1.45;
+}
+
+.decisionGuideGrid p {
+  margin: 10px 0 0;
+  color: #526177;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.decisionGuideActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.siteFooter {
+  border-top: 1px solid var(--line);
+  background: #ffffff;
+}
+
+.siteFooterInner {
+  display: flex;
+  width: min(1180px, calc(100% - 40px));
+  min-height: 150px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  margin: 0 auto;
+}
+
+.siteFooter strong {
+  font-size: 18px;
+}
+
+.siteFooter p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.siteFooterLinks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 18px;
+  color: #41516a;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.privacyPage {
+  width: min(860px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 76px 0 100px;
+}
+
+.privacyPage h1 {
+  margin: 0;
+  font-size: clamp(40px, 6vw, 60px);
+  letter-spacing: -0.06em;
+}
+
+.privacyLead {
+  margin: 22px 0 44px;
+  color: #435269;
+  font-size: 19px;
+  line-height: 1.8;
+}
+
+.privacyPage section {
+  margin-top: 18px;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: #ffffff;
+}
+
+.privacyPage section h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+}
+
+.privacyPage section p {
+  margin: 0;
+  color: #526177;
+  line-height: 1.8;
+}
+
+.privacyHomeLink {
+  margin-top: 30px;
+}
+
 .learningPointBox,
 .relatedKeywordBox {
   margin-top: 58px;
@@ -1082,6 +1340,19 @@ input {
 }
 
 @media (max-width: 900px) {
+  .siteHeaderInner {
+    width: min(100% - 24px, 1180px);
+    min-height: 70px;
+  }
+
+  .siteNav > a:not(.siteHeaderConsult) {
+    display: none;
+  }
+
+  .siteNav {
+    gap: 0;
+  }
+
   .site {
     width: min(100% - 24px, 1180px);
     padding: 24px 0 68px;
@@ -1196,6 +1467,15 @@ input {
     padding: 27px;
   }
 
+  .decisionGuide {
+    padding: 27px;
+  }
+
+  .siteFooterInner {
+    width: min(100% - 24px, 1180px);
+    padding: 32px 0 104px;
+  }
+
   .detailSummaryBox,
   .learningPointBox,
   .relatedKeywordBox {
@@ -1216,6 +1496,25 @@ input {
 }
 
 @media (max-width: 560px) {
+  .siteBrand small {
+    display: none;
+  }
+
+  .siteBrand strong {
+    font-size: 15px;
+  }
+
+  .siteBrandMark {
+    width: 38px;
+    height: 38px;
+  }
+
+  .siteHeaderConsult {
+    min-height: 42px;
+    padding: 0 15px;
+    font-size: 14px;
+  }
+
   .site {
     width: min(100% - 18px, 1180px);
   }
@@ -1332,7 +1631,8 @@ input {
     font-size: 15px;
   }
 
-  .consultForm input[type="text"] {
+  .consultForm input[type="text"],
+  .consultForm input[type="tel"] {
     height: 58px;
     font-size: 16px;
   }
@@ -1374,5 +1674,36 @@ input {
   .consultProcessStep:nth-child(5) {
     min-height: 96px;
     grid-column: 1 / -1;
+  }
+
+  .decisionGuideGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .decisionGuideActions {
+    flex-direction: column;
+  }
+
+  .siteFooterInner,
+  .siteFooterLinks {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .siteFooterInner {
+    gap: 20px;
+  }
+
+  .siteFooterLinks {
+    justify-content: flex-start;
+  }
+
+  .privacyPage {
+    width: min(100% - 28px, 860px);
+    padding: 52px 0 110px;
+  }
+
+  .privacyPage section {
+    padding: 23px 20px;
   }
 }

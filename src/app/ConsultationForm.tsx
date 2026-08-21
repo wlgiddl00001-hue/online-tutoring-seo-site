@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import Link from "next/link";
 
 const CONSULTATION_SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbz_qksThrgOh0ukEi1tQGmqnKk5laZ2-7QaqCA94zoHPxRPI-SqqtaFID1woM9RylxD/exec";
@@ -9,6 +10,7 @@ type ConsultationFormProps = {
   showHeader?: boolean;
   gradePlaceholder?: string;
   phonePlaceholder?: string;
+  sourceLabel?: string;
 };
 
 type SubmissionStatus = "success" | "error" | null;
@@ -17,9 +19,11 @@ export default function ConsultationForm({
   showHeader = true,
   gradePlaceholder = "예: 초6, 중2, 고1",
   phonePlaceholder = "예: 010-1234-5678",
+  sourceLabel = "온라인 과외 메인페이지",
 }: ConsultationFormProps) {
   const [submissionStatus, setSubmissionStatus] =
     useState<SubmissionStatus>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const messageRef = useRef<HTMLDivElement>(null);
 
   const isSuccess = submissionStatus === "success";
@@ -64,11 +68,17 @@ export default function ConsultationForm({
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       await fetch(CONSULTATION_SCRIPT_URL, {
         method: "POST",
+        mode: "no-cors",
         body: JSON.stringify({
           siteType: "온라인과외 홈페이지",
+          sourceLabel,
+          pageTitle: document.title,
+          pageUrl: window.location.href,
           name,
           grade,
           subject,
@@ -82,6 +92,8 @@ export default function ConsultationForm({
     } catch (error) {
       console.error(error);
       setSubmissionStatus("error");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -99,31 +111,48 @@ export default function ConsultationForm({
 
       <label>
         이름
-        <input name="name" type="text" placeholder="예: 홍길동" />
+        <input name="name" type="text" placeholder="예: 홍길동" autoComplete="name" required />
       </label>
 
       <label>
         학생 학년
-        <input name="grade" type="text" placeholder={gradePlaceholder} />
+        <input name="grade" type="text" placeholder={gradePlaceholder} required />
       </label>
 
       <label>
         희망 과목
-        <input name="subject" type="text" placeholder="예: 수학, 영어, 국어" />
+        <input name="subject" type="text" placeholder="예: 수학, 영어, 국어" required />
       </label>
 
       <label>
         상담 가능한 연락처
-        <input name="phone" type="text" placeholder={phonePlaceholder} />
+        <input
+          name="phone"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          placeholder={phonePlaceholder}
+          required
+        />
       </label>
 
       <label className="checkLabel">
-        <input name="agree" type="checkbox" />
-        개인정보 수집 및 이용에 동의합니다.
+        <input name="agree" type="checkbox" required />
+        <span>
+          <Link href="/privacy">개인정보 수집 및 이용 안내</Link>를 확인했으며 이에 동의합니다.
+        </span>
       </label>
 
-      <button type="submit" className="primaryBtn fullBtn">
-        {submissionStatus === "success" ? "접수 완료" : "상담 신청하기"}
+      <p className="consultNotice">
+        상담은 무료이며, 수업료와 가능한 일정은 무료 모의수업 전에 안내합니다.
+      </p>
+
+      <button type="submit" className="primaryBtn fullBtn" disabled={isSubmitting} aria-busy={isSubmitting}>
+        {isSubmitting
+          ? "접수 중..."
+          : submissionStatus === "success"
+            ? "접수 완료"
+            : "무료 상담 신청하기"}
       </button>
       {(isSuccess || isError) && (
         <div

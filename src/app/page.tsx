@@ -8,6 +8,7 @@ import QuickConsultActions from './QuickConsultActions';
 import ConsultationForm from './ConsultationForm';
 import SubjectTabs from './SubjectTabs';
 import { createOrganizationSchema, createWebsiteSchema } from '@/lib/structured-data';
+import { getContextualGoalLabel } from '@/lib/tutoring-labels';
 
 type PageItem = {
   slug: string;
@@ -55,12 +56,6 @@ const gradeSections: GradeSection[] = [
   },
 ];
 
-const goalLabels: Record<string, string> = {
-  시험대비: '시험 대비',
-  문제풀이: '문제 풀이',
-  학습습관: '학습 습관 관리',
-};
-
 const featuredLinkTargets = [
   { grade: '초등', subject: '국어', goal: '어휘', group: '초등 과목' },
   { grade: '초등', subject: '수학', goal: '기초', group: '초등 기초' },
@@ -82,10 +77,6 @@ const featuredLinkTargets = [
   { grade: '고등', subject: '사회', goal: '입시', group: '고등 입시' },
 ];
 
-function getGoalLabel(goal: string) {
-  return goalLabels[goal] ?? goal;
-}
-
 function getFeaturedLinks() {
   return featuredLinkTargets
     .map((target) => {
@@ -103,7 +94,7 @@ function getFeaturedLinks() {
       return {
         ...target,
         slug: page.slug,
-        label: `${page.grade} ${page.subject} ${getGoalLabel(page.goal)} 온라인 과외`,
+        label: `${page.grade} ${page.subject} ${getContextualGoalLabel(page)} 온라인 과외`,
       };
     })
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
@@ -168,7 +159,7 @@ function ConsultationSection() {
         </div>
       </div>
 
-      <ConsultationForm />
+      <ConsultationForm sourceLabel="온라인 과외 메인페이지" />
     </section>
   );
 }
@@ -266,7 +257,11 @@ export default function Home() {
               pages: allPages
                 .filter((page) => page.grade === section.grade && page.subject === subject)
                 .slice(0, 5)
-                .map(({ slug, goal, mainKeyword }) => ({ slug, goal, mainKeyword })),
+                .map((page) => ({
+                  slug: page.slug,
+                  goal: getContextualGoalLabel(page),
+                  mainKeyword: page.mainKeyword,
+                })),
             }))}
           />
         </section>
