@@ -1,4 +1,4 @@
-import { detailImages, getGradeKey, getStableImages } from '@/data/imageMap';
+import { getDetailImages } from '@/data/imageMap';
 import pages from '@/data/pages.json';
 import type { Metadata } from 'next';
 import Image from 'next/image';
@@ -16,6 +16,7 @@ import {
 import {
   getContextualGoalLabel,
   getContextualMetaDescription,
+  normalizeKoreanParticles,
 } from '@/lib/tutoring-labels';
 
 type PageItem = {
@@ -178,14 +179,6 @@ const goalSummaries: Record<string, string[]> = {
   학습습관: ['수업 후 복습과 오답 정리를 이어가며 학습 루틴을 만듭니다.', '계획과 실행, 복습이 반복되는 안정적인 공부 흐름을 형성합니다.'],
 };
 
-const deliverySummaries = [
-  '실시간 화면 공유로 이해와 풀이 과정을 바로 확인합니다.',
-  '학생이 직접 설명하고 질문하는 1대1 흐름으로 진행합니다.',
-  '수업 후 복습 자료로 핵심 내용을 다시 점검합니다.',
-  '현재 수준에 맞춰 설명 속도와 문제 난도를 조정합니다.',
-  '개념 확인부터 오답 정리까지 한 흐름으로 관리합니다.',
-];
-
 const subjectSearchTopics: Record<string, string> = {
   국어: '비문학 독해, 문학 작품 분석, 어휘와 서술형 답안',
   영어: '영어 어휘, 문법, 문장 구조와 독해',
@@ -226,6 +219,52 @@ function getStableIndex(value: string, length: number) {
 
 function pickStable<T>(options: T[], key: string) {
   return options[getStableIndex(key, options.length)] as T;
+}
+
+function getDisplayMainKeyword(page: PageItem) {
+  return `온라인 ${page.grade} ${page.subject} ${getContextualGoalLabel(page)} 과외`;
+}
+
+const subjectLearningFocus: Record<string, string> = {
+  국어: '지문 근거, 핵심 문장, 서술형 표현',
+  영어: '어휘 뜻, 문장 구조, 해석 근거',
+  수학: '개념 연결, 식 세우기, 풀이 과정',
+  사회: '교과 용어, 사례 연결, 자료 해석',
+  과학: '원리 이해, 실험 조건, 탐구 자료',
+  한국사: '시대 흐름, 사건 관계, 사료 근거',
+};
+
+const deliverySummaryTemplates: Record<string, string[]> = {
+  초등: [
+    '{subjectFocus} 중심으로 짧은 질문과 적용 문제를 확인합니다.',
+    '{goalLabel}에 필요한 개념을 말로 설명하고 예시 문제에 바로 써 봅니다.',
+    '화면에 남긴 표시를 보며 {subject} 표현과 풀이 과정을 천천히 정리합니다.',
+  ],
+  중등: [
+    '학교 진도에 맞춰 {subjectFocus} 항목을 확인하고 오답을 다음 과제로 연결합니다.',
+    '{goalLabel} 준비 과정에서 풀이 근거와 과제 진행 상황을 함께 점검합니다.',
+    '수업 중 표시한 {subject} 오답을 내신과 수행평가 준비 흐름에 맞춰 정리합니다.',
+  ],
+  고등: [
+    '내신과 모의고사 흐름을 함께 보며 {subjectFocus}의 우선순위를 정합니다.',
+    '{goalLabel} 목표에 맞춰 개념 연결과 실전 적용 과정을 수업 중 점검합니다.',
+    '심화 문제 접근 과정에서 {subject} 근거와 시간 배분을 함께 확인합니다.',
+  ],
+};
+
+function getDeliverySummary(page: PageItem) {
+  const goalLabel = getContextualGoalLabel(page);
+  const subjectFocus = subjectLearningFocus[page.subject] ?? '개념 이해와 적용 과정';
+  const templates = deliverySummaryTemplates[page.grade] ?? deliverySummaryTemplates.초등;
+  const template = pickStable(templates, `${page.slug}:delivery`);
+
+  return template
+    .split('{subjectFocus}')
+    .join(subjectFocus)
+    .split('{goalLabel}')
+    .join(goalLabel)
+    .split('{subject}')
+    .join(page.subject);
 }
 
 function getDetailCopy(page: PageItem) {
@@ -276,7 +315,7 @@ function getDetailCopy(page: PageItem) {
     summaryPoints: [
       subjectSummary,
       goalSummary,
-      pickStable(deliverySummaries, `${page.slug}:delivery`),
+      getDeliverySummary(page),
     ],
     introHeading: pickStable(
       [
@@ -289,7 +328,7 @@ function getDetailCopy(page: PageItem) {
     directionHeading: pickStable(
       [
         `${page.subject} ${goalLabel} 목표에 맞춘 수업 방향`,
-        `${page.mainKeyword} 학습 설계`,
+        `${getDisplayMainKeyword(page)} 학습 설계`,
         `${page.grade} ${page.subject}, ${goalLabel} 과정을 정리하는 방법`,
       ],
       `${page.slug}:direction-heading`,
@@ -377,20 +416,79 @@ function personalizeParagraph(
   paragraph: string,
   sectionLabel: string,
 ) {
-  const context = `${page.grade} ${page.subject} ${getContextualGoalLabel(page)}`;
+  const goalLabel = getContextualGoalLabel(page);
+  const context = `${page.grade} ${page.subject} ${goalLabel}`;
 
-  return paragraph
+  return normalizeKoreanParticles(paragraph)
     .split(/(?<=[.!?])\s+/)
-    .map((sentence) => {
+    .map((sentence, index) => {
       const trimmedSentence = sentence.trim();
 
       if (!repeatedBodySentences.has(trimmedSentence)) {
         return trimmedSentence;
       }
 
-      return `${context} ${sectionLabel} 기준으로 보면, ${trimmedSentence}`;
+      return rewriteRepeatedSentence(page, context, sectionLabel, index);
     })
     .join(' ');
+}
+
+const sectionRewriteTemplates: Record<string, string[]> = {
+  '학습 진단': [
+    '{context} 수업을 시작할 때는 최근에 막힌 단원과 답을 고른 이유를 먼저 듣고, 바로 확인할 문제를 짧게 정합니다.',
+    '{grade} 학생의 {subject} 흐름을 보며 읽기, 설명, 풀이 중 어느 단계에서 멈추는지 나누어 확인합니다.',
+    '{goal} 목표에 필요한 준비 상태를 과제량보다 이해 과정 중심으로 살펴보고 첫 수업의 우선순위를 정합니다.',
+  ],
+  '수업 설계': [
+    '{context} 과정은 설명, 적용 문제, 짧은 피드백이 이어지도록 구성해 수업 중 바로 이해도를 확인합니다.',
+    '{grade} {subject} 수업에서는 {subjectFocus} 중심으로 설명할 부분과 바로 풀어볼 문제를 나누어 둡니다.',
+    '{subject} {goal} 과정은 먼저 볼 개념과 적용 문제를 구분해 학생이 근거를 말해보는 시간까지 확보합니다.',
+    '{goal} 준비에 맞춰 {subjectFocus}를 다루는 순서와 확인 문제의 난도를 수업 안에서 조정합니다.',
+    '{goal} 준비에 필요한 단원부터 순서를 잡고, 이미 아는 내용은 빠르게 지나가며 막힌 부분에 시간을 둡니다.',
+  ],
+  '실시간 관리': [
+    '화면 공유 중에는 {subject} 풀이 흔적과 답변을 함께 보며 다음 질문의 난도와 설명 속도를 조정합니다.',
+    '{grade} {subject} 수업에서는 학생의 설명과 화면 필기를 함께 보며 {subjectFocus} 중 다시 볼 지점을 가릅니다.',
+    '{goal} 학습 중 나온 답변은 말로 확인한 근거와 필기 흔적을 나누어 보고 다음 예시를 정합니다.',
+    '학생이 직접 정리한 {subject} 풀이와 질문 반응을 보며 이해한 내용과 보완할 내용을 구분합니다.',
+    '1대1 온라인 수업에서는 {goal}에 필요한 자료를 바로 표시하고 학생 반응에 맞춰 예시를 바꿔 봅니다.',
+  ],
+  '복습 관리': [
+    '수업 뒤에는 {context}에서 다시 볼 문제와 개념을 짧게 남기고 다음 시간 첫 순서로 확인합니다.',
+    '{subject} 오답은 틀린 답만 모으지 않고, 왜 그 선택을 했는지까지 적어 다음 복습의 기준으로 삼습니다.',
+    '{goal} 학습이 이어지도록 과제량을 무리하게 늘리기보다 반복해서 흔들린 유형을 우선 점검합니다.',
+  ],
+  '상담 안내': [
+    '상담에서는 {context}에 필요한 수업 범위, 과제 확인 방식, 복습 흐름을 함께 정리합니다.',
+    '{grade} {subject} 수업 전에는 현재 진도와 원하는 목표를 듣고 온라인 수업에서 먼저 볼 지점을 안내합니다.',
+    '{goal} 준비가 필요한 이유를 확인한 뒤 학생에게 맞는 설명 방식과 수업 간격을 조정합니다.',
+  ],
+};
+
+function rewriteRepeatedSentence(
+  page: PageItem,
+  context: string,
+  sectionLabel: string,
+  sentenceIndex: number,
+) {
+  const templates = sectionRewriteTemplates[sectionLabel] ?? [
+    '{context} 수업에서는 학생이 멈춘 지점을 확인하고 다음 설명과 복습 순서를 조정합니다.',
+    '{grade} {subject} 학습 흐름에 맞춰 개념 확인, 적용, 오답 정리를 한 번에 이어 갑니다.',
+    '{goal} 목표에 필요한 내용을 수업 중 바로 점검하고 다음 과제로 연결합니다.',
+  ];
+  const template = pickStable(templates, `${page.slug}:${sectionLabel}:${sentenceIndex}`);
+
+  return template
+    .split('{context}')
+    .join(context)
+    .split('{grade}')
+    .join(page.grade)
+    .split('{subject}')
+    .join(page.subject)
+    .split('{subjectFocus}')
+    .join(subjectLearningFocus[page.subject] ?? '개념 이해와 적용 과정')
+    .split('{goal}')
+    .join(getContextualGoalLabel(page));
 }
 
 function sortByLearningPath(firstPage: PageItem, secondPage: PageItem) {
@@ -515,16 +613,41 @@ const subjectLearningPoint: Record<string, string> = {
   한국사: '시대 흐름과 핵심 개념을 연결해 정리합니다.',
 };
 
-const gradeLearningPoint: Record<string, string> = {
-  초등: '기초 개념과 학습습관을 함께 다져 스스로 공부하는 힘을 기릅니다.',
-  중등: '내신과 수행평가를 함께 준비하며 과목별 약점을 정리합니다.',
-  고등: '시험대비와 심화 학습, 입시 목표에 맞춰 우선순위를 관리합니다.',
+const gradeLearningPointTemplates: Record<string, string[]> = {
+  초등: [
+    '{subject} 기본 개념을 쉬운 예시로 확인하고, 학생이 직접 말하고 써 보는 시간을 둡니다.',
+    '{goalLabel} 과정은 짧은 적용 문제와 복습 약속을 함께 남겨 공부 습관으로 이어지게 합니다.',
+    '{subjectFocus} 중심으로 이해한 내용을 표현하고 다시 적용하는 연습을 반복합니다.',
+  ],
+  중등: [
+    '학교 진도와 {goalLabel} 준비를 함께 보며 {subject} 오답 원인을 수업 후 과제로 연결합니다.',
+    '{subjectFocus} 항목을 기준으로 내신 범위와 수행평가 준비 순서를 나누어 관리합니다.',
+    '단원별 약점을 정리한 뒤 비슷한 {subject} 유형에서 같은 실수가 반복되는지 확인합니다.',
+  ],
+  고등: [
+    '내신과 모의고사 흐름을 함께 살피며 {subject} 개념 연결과 {goalLabel} 우선순위를 정합니다.',
+    '{subjectFocus} 중심으로 실전 문제에 적용하는 과정을 보며 심화 학습과 시험 준비를 조정합니다.',
+    '{goalLabel} 목표에 맞춰 개념 정리, 오답 분석, 다음 학습 범위를 한 수업 안에서 구분합니다.',
+  ],
 };
+
+function getGradeLearningPoint(page: PageItem) {
+  const templates = gradeLearningPointTemplates[page.grade] ?? gradeLearningPointTemplates.초등;
+  const template = pickStable(templates, `${page.slug}:grade-learning`);
+
+  return template
+    .split('{subject}')
+    .join(page.subject)
+    .split('{goalLabel}')
+    .join(getContextualGoalLabel(page))
+    .split('{subjectFocus}')
+    .join(subjectLearningFocus[page.subject] ?? '개념 이해와 적용 과정');
+}
 
 function getLearningPoints(page: PageItem) {
   return [
     subjectLearningPoint[page.subject],
-    gradeLearningPoint[page.grade],
+    getGradeLearningPoint(page),
     `${getContextualGoalLabel(page)} 목표에 맞춰 오답 원인을 정리하고 반복 실수를 줄입니다.`,
   ];
 }
@@ -587,12 +710,7 @@ export default async function DetailPage({ params }: DetailPageProps) {
     notFound();
   }
 
-  const gradeKey = getGradeKey(page.grade);
-  const [heroImage, inlineImage] = getStableImages(
-    detailImages[gradeKey],
-    page.slug,
-    2,
-  );
+  const [heroImage, inlineImage] = getDetailImages(page.grade, page.subject, page.slug, 2);
   const relatedLinks = getRelatedLinks(page);
   const learningPoints = getLearningPoints(page);
   const detailCopy = getDetailCopy(page);

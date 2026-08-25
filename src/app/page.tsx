@@ -187,7 +187,7 @@ export default function Home() {
       <section className="hero">
         <div className="heroText">
           <p className="eyebrow heroEyebrow">장소보다 학습 과정에 집중하는 온라인 과외</p>
-          <h1>호빈샘 온라인 과외</h1>
+          <h1>호빈샘 초등·중등·고등 1대1 온라인 과외</h1>
           <p className="heroDesc">
             초등 기초부터 중등 내신, 고등 심화와 입시 준비까지 학생의 현재
             수준과 목표를 확인하고 1대1 온라인 수업으로 꾸준히 관리합니다.
@@ -260,7 +260,7 @@ export default function Home() {
                 .map((page) => ({
                   slug: page.slug,
                   goal: getContextualGoalLabel(page),
-                  mainKeyword: page.mainKeyword,
+                  mainKeyword: `온라인 ${page.grade} ${page.subject} ${getContextualGoalLabel(page)} 과외`,
                 })),
             }))}
           />
