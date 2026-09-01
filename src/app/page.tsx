@@ -188,9 +188,9 @@ export default function Home() {
         <div className="heroText">
           <p className="eyebrow heroEyebrow">장소보다 학습 과정에 집중하는 온라인 과외</p>
           <h1>
-  호빈샘 초등·중등·고등
-  <br />
-  1대1 온라인 과외
+  <span>호빈샘</span>
+  <span>초등·중등·고등</span>
+  <span>1대1 온라인 과외</span>
 </h1>
           <p className="heroDesc">
             초등 기초부터 중등 내신, 고등 심화와 입시 준비까지 학생의 현재
