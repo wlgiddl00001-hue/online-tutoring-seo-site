@@ -5,6 +5,7 @@ const site = "https://online-tutoring-seo-site.vercel.app";
 
 const urls = [
   site,
+  `${site}/privacy`,
   ...pages.map((page) => `${site}/${page.slug}`),
 ];
 
