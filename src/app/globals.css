@@ -1345,9 +1345,36 @@ input {
     min-height: 70px;
   }
 
-  .siteNav > a:not(.siteHeaderConsult) {
+  @media (max-width: 768px) {
+  .siteHeaderInner {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .siteNav {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .siteNav > a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    font-size: 14px;
+  }
+
+  .siteNav > a:nth-child(4) {
     display: none;
   }
+
+  .siteHeaderConsult {
+    grid-column: 1 / -1;
+  }
+}
 
   .siteNav {
     gap: 0;
