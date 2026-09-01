@@ -229,16 +229,32 @@ export default function Home() {
       무료 모의수업 후 정규수업 여부를 결정할 수 있습니다.
     </p>
 
-    <ol className="consultProcessSteps">
-      {['상담신청', '선생님 배정', '무료 모의수업', '정규수업 및 관리'].map(
-        (step, index) => (
-          <li className="consultProcessStep" key={step}>
-            <span className="consultProcessNumber">{index + 1}</span>
-            <strong>{step}</strong>
-          </li>
-        ),
-      )}
-    </ol>
+    <div className="consultProcessGrid">
+  {[
+    {
+      title: '상담신청',
+      desc: '학생 학년, 과목, 현재 학습상황을 간단히 확인합니다.',
+    },
+    {
+      title: '선생님 배정',
+      desc: '학생의 수준과 성향, 희망 수업시간을 고려해 배정합니다.',
+    },
+    {
+      title: '무료 모의수업',
+      desc: '실제 수업을 먼저 진행해 보고 수업 방식이 맞는지 확인합니다.',
+    },
+    {
+      title: '정규수업 및 관리',
+      desc: '수업뿐 아니라 숙제, 오답, 시험대비까지 함께 관리합니다.',
+    },
+  ].map((step, index) => (
+    <div className="consultProcessCard" key={step.title}>
+      <span className="consultProcessNumber">{index + 1}</span>
+      <h3>{step.title}</h3>
+      <p>{step.desc}</p>
+    </div>
+  ))}
+</div>
   </div>
 </section>
 <section className="section">
@@ -251,12 +267,27 @@ export default function Home() {
     </p>
   </div>
 
-  <div className="heroBenefits">
-    <div className="heroBenefit">학생 학년과 현재 성적</div>
-    <div className="heroBenefit">취약단원과 학습 고민</div>
-    <div className="heroBenefit">학생 성향과 수업 스타일</div>
-    <div className="heroBenefit">희망 수업시간과 학습 목표</div>
+  <div className="matchTeacherGrid">
+  <div className="matchTeacherCard">
+    <h3>학생 학년과 현재 성적</h3>
+    <p>현재 학년과 성적 수준을 확인해 기초 보완이 필요한지, 심화가 필요한지 먼저 판단합니다.</p>
   </div>
+
+  <div className="matchTeacherCard">
+    <h3>취약단원과 학습 고민</h3>
+    <p>어떤 단원에서 막히는지, 시험 준비에서 어떤 부분이 어려운지 확인해 수업 방향을 잡습니다.</p>
+  </div>
+
+  <div className="matchTeacherCard">
+    <h3>학생 성향과 수업 스타일</h3>
+    <p>차분한 설명형 수업이 잘 맞는지, 질문을 많이 유도하는 방식이 좋은지 학생 성향을 함께 봅니다.</p>
+  </div>
+
+  <div className="matchTeacherCard">
+    <h3>희망 수업시간과 학습 목표</h3>
+    <p>희망 시간과 내신, 시험대비, 기초보완 등 수업 목표를 확인해 맞는 선생님을 배정합니다.</p>
+  </div>
+</div>
 
   <div className="heroButtons">
     <a href="#consult" className="primaryBtn">

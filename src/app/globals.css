@@ -1753,3 +1753,97 @@ input {
     font-size: 18px;
   }
 }
+.consultProcessGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 28px;
+}
+
+.consultProcessCard {
+  position: relative;
+  padding: 28px 24px 24px;
+  border: 1px solid #dbe4f3;
+  border-radius: 24px;
+  background: #ffffff;
+  min-height: 180px;
+  box-sizing: border-box;
+}
+
+.consultProcessCard h3 {
+  margin: 18px 0 10px;
+  font-size: 24px;
+  line-height: 1.35;
+}
+
+.consultProcessCard p {
+  margin: 0;
+  color: #5b6475;
+  line-height: 1.7;
+  font-size: 16px;
+}
+
+.consultProcessCard .consultProcessNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  font-size: 22px;
+  font-weight: 800;
+  background: #2f67f6;
+  color: #fff;
+}
+
+.matchTeacherGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 32px;
+}
+
+.matchTeacherCard {
+  padding: 24px;
+  border: 1px solid #dbe4f3;
+  border-radius: 24px;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.matchTeacherCard h3 {
+  margin: 0 0 12px;
+  font-size: 22px;
+  line-height: 1.4;
+}
+
+.matchTeacherCard p {
+  margin: 0;
+  color: #5b6475;
+  line-height: 1.7;
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .consultProcessGrid,
+  .matchTeacherGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .consultProcessCard,
+  .matchTeacherCard {
+    padding: 20px 18px;
+    min-height: auto;
+  }
+
+  .consultProcessCard h3,
+  .matchTeacherCard h3 {
+    font-size: 20px;
+  }
+
+  .consultProcessCard p,
+  .matchTeacherCard p {
+    font-size: 15px;
+  }
+}
