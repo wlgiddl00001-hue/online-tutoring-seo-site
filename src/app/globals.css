@@ -1719,3 +1719,37 @@ input {
     letter-spacing: -2px;
   }
 }
+.faqList {
+  display: grid;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.faqItem {
+  padding: 22px 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.faqItem h3 {
+  margin: 0 0 10px;
+  font-size: 20px;
+  line-height: 1.4;
+}
+
+.faqItem p {
+  margin: 0;
+  line-height: 1.7;
+  color: #4b5563;
+}
+
+@media (max-width: 768px) {
+  .faqItem {
+    padding: 18px;
+  }
+
+  .faqItem h3 {
+    font-size: 18px;
+  }
+}

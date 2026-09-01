@@ -197,13 +197,13 @@ export default function Home() {
             수준과 목표를 확인하고 1대1 온라인 수업으로 꾸준히 관리합니다.
           </p>
           <div className="heroBenefits">
-            <div className="heroBenefit">실시간 화면 공유 수업</div>
-            <div className="heroBenefit">수업 후 복습 자료로 다시 확인</div>
-            <div className="heroBenefit">집에서도 집중되는 1대1 관리</div>
-            <div className="heroBenefit">개념 설명부터 오답 관리까지</div>
-          </div>
+  <div className="heroBenefit">무료 모의수업 후 결정</div>
+  <div className="heroBenefit">학생 수준·성향에 맞는 선생님 배정</div>
+  <div className="heroBenefit">숙제·오답·시험대비 관리</div>
+  <div className="heroBenefit">1대1 실시간 질문·풀이 확인</div>
+</div>
           <div className="heroButtons">
-            <a href="#consult" className="primaryBtn">상담 신청하기</a>
+            <a href="#consult" className="primaryBtn">무료 모의수업 상담신청</a>
             <a href="tel:01082867620" className="secondaryBtn">전화 상담하기 010-8286-7620</a>
           </div>
         </div>
@@ -221,7 +221,49 @@ export default function Home() {
           </div>
         </div>
       </section>
+<section className="consultProcessSection">
+  <div className="consultProcess">
+    <h2 className="consultProcessTitle">온라인 과외, 이렇게 진행됩니다</h2>
+    <p className="consultProcessDesc">
+      학생의 현재 학습상황을 확인한 뒤 선생님을 배정하고,
+      무료 모의수업 후 정규수업 여부를 결정할 수 있습니다.
+    </p>
 
+    <ol className="consultProcessSteps">
+      {['상담신청', '선생님 배정', '무료 모의수업', '정규수업 및 관리'].map(
+        (step, index) => (
+          <li className="consultProcessStep" key={step}>
+            <span className="consultProcessNumber">{index + 1}</span>
+            <strong>{step}</strong>
+          </li>
+        ),
+      )}
+    </ol>
+  </div>
+</section>
+<section className="section">
+  <div className="sectionHeading">
+    <p className="sectionLabel">맞춤 선생님 배정</p>
+    <h2>학생에게 맞는 선생님을 찾습니다</h2>
+    <p>
+      단순히 과목이 같은 선생님을 연결하는 것이 아니라
+      학생의 현재 학습상황과 성향을 확인한 뒤 수업 방향을 맞춰 배정합니다.
+    </p>
+  </div>
+
+  <div className="heroBenefits">
+    <div className="heroBenefit">학생 학년과 현재 성적</div>
+    <div className="heroBenefit">취약단원과 학습 고민</div>
+    <div className="heroBenefit">학생 성향과 수업 스타일</div>
+    <div className="heroBenefit">희망 수업시간과 학습 목표</div>
+  </div>
+
+  <div className="heroButtons">
+    <a href="#consult" className="primaryBtn">
+      선생님 배정 상담하기
+    </a>
+  </div>
+</section>
       <section className="section gradePickerSection">
         <div className="sectionHeading">
           <p className="sectionLabel">학년별 수업 찾기</p>
@@ -239,7 +281,73 @@ export default function Home() {
           ))}
         </div>
       </section>
+<section className="section">
+  <div className="sectionHeading">
+    <p className="sectionLabel">온라인 과외 FAQ</p>
+    <h2>온라인 과외가 처음이라 걱정되시나요?</h2>
+    <p>
+      처음 시작하는 학부모님들이 많이 궁금해하시는 내용을 정리했습니다.
+    </p>
+  </div>
 
+  <div className="faqList">
+    <div className="faqItem">
+      <h3>온라인인데 집중이 가능한가요?</h3>
+      <p>
+        1대1 실시간 수업으로 진행되기 때문에 학생의 반응과 문제풀이 과정을
+        확인하면서 수업을 진행할 수 있습니다.
+      </p>
+    </div>
+
+    <div className="faqItem">
+      <h3>온라인 수업이 처음이어도 가능한가요?</h3>
+      <p>
+        수업 전 접속 방법을 안내받은 뒤 노트북이나 태블릿 등으로 참여할 수 있습니다.
+      </p>
+    </div>
+
+    <div className="faqItem">
+      <h3>모르는 문제를 바로 질문할 수 있나요?</h3>
+      <p>
+        녹화된 강의를 보는 방식이 아니라 선생님과 실시간으로 진행되기 때문에
+        수업 중 궁금한 내용을 바로 질문할 수 있습니다.
+      </p>
+    </div>
+
+    <div className="faqItem">
+      <h3>학교 시험 대비도 가능한가요?</h3>
+      <p>
+        학생의 학교 시험범위와 현재 수준을 확인한 뒤 내신과 시험 대비 수업을
+        진행할 수 있습니다.
+      </p>
+    </div>
+
+    <div className="faqItem">
+      <h3>선생님과 잘 맞지 않으면 어떻게 하나요?</h3>
+      <p>
+        수업 진행 중 어려움이 있다면 담당자와 상담 후 선생님 변경 가능 여부를
+        안내받을 수 있습니다.
+      </p>
+    </div>
+  </div>
+</section>
+<section className="section">
+  <div className="sectionHeading">
+    <p className="sectionLabel">무료 모의수업</p>
+    <h2>바로 시작하지 않아도 됩니다</h2>
+    <h3>무료 모의수업 후 결정하세요</h3>
+    <p>
+      온라인 과외가 처음이거나 학생과 선생님의 수업 방식이 잘 맞을지 걱정된다면,
+      먼저 무료 모의수업을 진행해 본 뒤 정규수업 여부를 결정할 수 있습니다.
+    </p>
+  </div>
+
+  <div className="heroButtons">
+    <a href="#consult" className="primaryBtn">
+      무료 모의수업 상담신청
+    </a>
+  </div>
+</section>
       {gradeSections.map((section, gradeIndex) => (
         <section
           id={section.id}
